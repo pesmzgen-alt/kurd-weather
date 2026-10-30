@@ -8,22 +8,30 @@
 <style>
 *{box-sizing:border-box}
 body{
-margin:0;font-family:Arial,sans-serif;
+margin:0;padding:25px 15px;
+font-family:Arial,sans-serif;
 background:linear-gradient(140deg,#092b55,#1676a5);
 color:white;text-align:center;min-height:100vh;
-padding:25px 15px;
 }
-.container{max-width:650px;margin:auto}
+.container{max-width:750px;margin:auto}
 h1{font-size:30px}
 .search{display:flex;gap:8px;margin:25px 0}
-input{flex:1;padding:14px;border:0;border-radius:12px;font-size:17px;min-width:0}
+input{flex:1;min-width:0;padding:14px;border:0;border-radius:12px;font-size:17px}
 button{padding:13px 18px;border:0;border-radius:12px;background:#ffc857;font-size:16px;font-weight:bold}
 .card{background:#ffffff20;border:1px solid #ffffff40;border-radius:22px;padding:25px;margin:15px 0}
 .icon{font-size:75px}
 .temp{font-size:65px;font-weight:bold;margin:10px}
 .details{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .details div{background:#ffffff18;padding:18px;border-radius:15px}
+.forecast{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:18px}
+.day{background:#ffffff20;border:1px solid #ffffff30;border-radius:15px;padding:15px 8px}
+.day-icon{font-size:32px;margin:8px}
+.day-name{font-weight:bold}
+.day-temp{font-size:19px;margin:8px}
+.day-rain{font-size:13px;color:#c8edff}
+h2{margin-top:30px}
 #message{color:#ffe29a}
+@media(min-width:600px){.forecast{grid-template-columns:repeat(4,1fr)}}
 </style>
 </head>
 <body>
@@ -44,32 +52,89 @@ button{padding:13px 18px;border:0;border-radius:12px;background:#ffc857;font-siz
 <div>💧 رێژا تەمێ<br><b id="humidity">--</b></div>
 </div>
 </div>
+
+<h2>📅 پێشبینییا کەشوهەوایا ٧ ڕۆژان</h2>
+<div class="forecast" id="forecast">
+<div class="day">بۆ دیتنا پێشبینیێ، ناڤێ باژێرێ بنڤیسە</div>
+</div>
 <p id="message">ناڤێ باژێرێ بنڤیسە بۆ زانینا کەشوهەوا</p>
 </div>
 <script>
+const codes={
+0:['☀️','ئاسمان پاکە'],
+1:['🌤️','کەمێک هەور'],
+2:['⛅','هەوراوە'],
+3:['☁️','هەور'],
+45:['🌫️','تەما'],
+48:['🌫️','تەمای بەفرین'],
+51:['🌦️','بارانا سووک'],
+53:['🌦️','باران'],
+55:['🌧️','بارانا زۆر'],
+61:['🌧️','باران'],
+63:['🌧️','بارانا مامناڤەند'],
+65:['🌧️','بارانا زۆر'],
+71:['🌨️','بەفر'],
+73:['🌨️','بەفرا مامناڤەند'],
+75:['❄️','بەفرا زۆر'],
+80:['🌦️','بارانی چەند جار'],
+81:['🌧️','باران'],
+82:['⛈️','بارانا زۆر'],
+95:['⛈️','ڕەعد و برووسکە'],
+96:['⛈️','ڕەعد و تەرز'],
+99:['⛈️','ڕەعد و تەرزا زۆر']
+};
+const weekdays=['یەکشەممە','دووشەممە','سێشەممە','چوارشەممە','پێنجشەممە','هەینی','شەممە'];
+
 async function getWeather(){
 const city=document.getElementById('city').value.trim();
-if(!city){document.getElementById('message').textContent='تکایە ناڤێ باژێرێ بنڤیسە';return}
+if(!city){
+document.getElementById('message').textContent='تکایە ناڤێ باژێرێ بنڤیسە';
+return;
+}
 document.getElementById('message').textContent='چاوەڕێ بکە...';
 try{
 const geo=await fetch('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(city)+'&count=1&language=en&format=json');
 const gd=await geo.json();
-if(!gd.results||!gd.results.length)throw Error('باژێر نەهاتە دیتن');
+if(!gd.results||!gd.results.length)throw Error('City not found');
 const p=gd.results[0];
-const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.latitude}&longitude=${p.longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m&timezone=auto`);
-const d=await r.json();
+
+const url=`https://api.open-meteo.com/v1/forecast?latitude=${p.latitude}&longitude=${p.longitude}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&forecast_days=7&timezone=auto`;
+
+const response=await fetch(url);
+const d=await response.json();
 const c=d.current;
+
 document.getElementById('place').textContent=p.name;
 document.getElementById('temp').textContent=Math.round(c.temperature_2m)+'°C';
 document.getElementById('wind').textContent=c.wind_speed_10m+' km/h';
 document.getElementById('humidity').textContent=c.relative_humidity_2m+'%';
-const codes={0:['☀️','ئاسمان پاکە'],1:['🌤️','کەمێک هەور'],2:['⛅','هەوراوە'],3:['☁️','هەور'],45:['🌫️','تەما'],48:['🌫️','تەمای بەفرین'],51:['🌦️','بارانا سووک'],61:['🌧️','باران'],63:['🌧️','باران'],65:['🌧️','بارانا زۆر'],71:['🌨️','بەفر'],80:['🌦️','باران'],95:['⛈️','ڕەعد و برووسکە']};
+
 const w=codes[c.weather_code]||['🌡️','کەشوهەوای گۆڕاو'];
 document.getElementById('icon').textContent=w[0];
 document.getElementById('desc').textContent=w[1];
+
+let html='';
+for(let i=0;i<7;i++){
+const date=new Date(d.daily.time[i]+'T12:00:00');
+const day=weekdays[date.getDay()];
+const weather=codes[d.daily.weather_code[i]]||['🌡️','گۆڕاو'];
+const max=Math.round(d.daily.temperature_2m_max[i]);
+const min=Math.round(d.daily.temperature_2m_min[i]);
+const rain=d.daily.precipitation_probability_max[i];
+
+html+=`
+<div class="day">
+<div class="day-name">${i===0?'ئەمڕۆ':day}</div>
+<div class="day-icon">${weather[0]}</div>
+<div>${weather[1]}</div>
+<div class="day-temp">${max}° / ${min}°</div>
+<div class="day-rain">💧 ئەگەری باران: ${rain===null?'--':rain+'%'}</div>
+</div>`;
+}
+document.getElementById('forecast').innerHTML=html;
 document.getElementById('message').textContent='نوێکرایەوە ✓';
 }catch(e){
-document.getElementById('message').textContent='باژێر نەهاتە دیتن یان ئینتەرنێت نییە. دووبارە هەوڵ بدە.';
+document.getElementById('message').textContent='کێشەیەک ڕووی دا. ئینتەرنێت و ناڤێ باژێرێ بپشکنە.';
 }
 }
 </script>
