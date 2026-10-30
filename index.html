@@ -1,142 +1,165 @@
-
 <!DOCTYPE html>
 <html lang="ckb" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>کەشوهەوایا کوردستان</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>کەشوهەوای کوردستان</title>
 <style>
 *{box-sizing:border-box}
-body{
-margin:0;padding:25px 15px;
-font-family:Arial,sans-serif;
-background:linear-gradient(140deg,#092b55,#1676a5);
-color:white;text-align:center;min-height:100vh;
-}
-.container{max-width:750px;margin:auto}
+body{margin:0;padding:25px 15px;font-family:Arial,sans-serif;color:white;text-align:center;min-height:100vh;background:linear-gradient(140deg,#092b55,#1676a5)}
+.container{max-width:950px;margin:auto}
 h1{font-size:30px}
-.search{display:flex;gap:8px;margin:25px 0}
-input{flex:1;min-width:0;padding:14px;border:0;border-radius:12px;font-size:17px}
-button{padding:13px 18px;border:0;border-radius:12px;background:#ffc857;font-size:16px;font-weight:bold}
-.card{background:#ffffff20;border:1px solid #ffffff40;border-radius:22px;padding:25px;margin:15px 0}
-.icon{font-size:75px}
-.temp{font-size:65px;font-weight:bold;margin:10px}
-.details{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.details div{background:#ffffff18;padding:18px;border-radius:15px}
-.forecast{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:18px}
-.day{background:#ffffff20;border:1px solid #ffffff30;border-radius:15px;padding:15px 8px}
-.day-icon{font-size:32px;margin:8px}
-.day-name{font-weight:bold}
-.day-temp{font-size:19px;margin:8px}
-.day-rain{font-size:13px;color:#c8edff}
-h2{margin-top:30px}
-#message{color:#ffe29a}
-@media(min-width:600px){.forecast{grid-template-columns:repeat(4,1fr)}}
+.sub{color:#dceeff}
+.search{display:flex;gap:10px;margin:30px 0}
+input{flex:1;min-width:0;padding:15px;border:0;border-radius:14px;font-size:18px}
+button{padding:13px 20px;border:0;border-radius:12px;background:#ffc857;color:#07508b;font-size:17px;font-weight:bold;cursor:pointer}
+.lang{background:#fff;color:#07508b;margin:5px}
+.card{background:#ffffff20;border:1px solid #ffffff40;border-radius:25px;padding:25px;margin:15px 0}
+.icon{font-size:65px;margin:10px}
+.temp{font-size:75px;font-weight:bold;margin:15px}
+.details{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:25px}
+.details div,.day{background:#ffffff20;padding:18px;border-radius:17px}
+.forecast{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:12px}
+.day{border:1px solid #ffffff30}
+.day-icon{font-size:35px;margin:12px}
+.small{color:#dceeff;font-size:14px}
+#message{margin:15px;color:#ffe29a}
+@media(max-width:450px){.temp{font-size:58px}.search{gap:6px}button{padding:12px}}
 </style>
 </head>
 <body>
 <div class="container">
-<h1>🌤️ کەشوهەوایا کوردستان</h1>
-<p>زانیاری کەشوهەوا ل هەمی باژێرێن جیهانێ</p>
+<h1>🌤 کەشوهەوایا کوردستان</h1>
+<p class="sub" id="subtitle">زانیاری کەشوهەوا ل هەمی باژێرێن جیهانێ</p>
+
+<div>
+<button class="lang" onclick="setLang('ckb')">کورمانجی</button>
+<button class="lang" onclick="setLang('sor')">سۆرانی</button>
+</div>
+
 <div class="search">
-<input id="city" placeholder="ناڤێ باژێری بنڤیسە...">
-<button onclick="getWeather()">بگەڕێ</button>
+<input id="city" placeholder="ناڤێ باژێری بنڤیسە..." value="Duhok">
+<button onclick="searchCity()" id="searchBtn">بگەڕێ</button>
 </div>
+
 <div class="card">
-<div class="icon" id="icon">☀️</div>
-<h2 id="place">دهۆک</h2>
-<div class="temp" id="temp">--°</div>
-<h3 id="desc">کەشوهەوا</h3>
+<div class="icon" id="icon">🌤️</div>
+<h2 id="cityName">Duhok</h2>
+<div class="temp" id="temp">--°C</div>
+<h3 id="description">کەشوهەوا</h3>
 <div class="details">
-<div>💨 با<br><b id="wind">--</b></div>
-<div>💧 رێژا تەمێ<br><b id="humidity">--</b></div>
+<div>💧 <span id="humidityLabel">ڕێژا تەمی</span><h3 id="humidity">--</h3></div>
+<div>💨 <span id="windLabel">با</span><h3 id="wind">--</h3></div>
+<div>🌡 <span id="feelsLabel">هەست پێکرن</span><h3 id="feels">--</h3></div>
+<div>🌧 <span id="rainLabel">ئەگەری بارانێ</span><h3 id="rain">--</h3></div>
 </div>
 </div>
 
-<h2>📅 پێشبینییا کەشوهەوایا ٧ ڕۆژان</h2>
-<div class="forecast" id="forecast">
-<div class="day">بۆ دیتنا پێشبینیێ، ناڤێ باژێرێ بنڤیسە</div>
+<h2 id="forecastTitle">📅 پێشبینییا کەشوهەوایا ٧ ڕۆژان</h2>
+<div class="forecast" id="forecast"></div>
+<p id="message">بۆ دیتنا کەشوهەوا ناڤێ باژێری بنڤیسە.</p>
 </div>
-<p id="message">ناڤێ باژێرێ بنڤیسە بۆ زانینا کەشوهەوا</p>
-</div>
+
 <script>
-const codes={
-0:['☀️','ئاسمان پاکە'],
-1:['🌤️','کەمێک هەور'],
-2:['⛅','هەوراوە'],
-3:['☁️','هەور'],
-45:['🌫️','تەما'],
-48:['🌫️','تەمای بەفرین'],
-51:['🌦️','بارانا سووک'],
-53:['🌦️','باران'],
-55:['🌧️','بارانا زۆر'],
-61:['🌧️','باران'],
-63:['🌧️','بارانا مامناڤەند'],
-65:['🌧️','بارانا زۆر'],
-71:['🌨️','بەفر'],
-73:['🌨️','بەفرا مامناڤەند'],
-75:['❄️','بەفرا زۆر'],
-80:['🌦️','بارانی چەند جار'],
-81:['🌧️','باران'],
-82:['⛈️','بارانا زۆر'],
-95:['⛈️','ڕەعد و برووسکە'],
-96:['⛈️','ڕەعد و تەرز'],
-99:['⛈️','ڕەعد و تەرزا زۆر']
+let language="ckb";
+
+const words={
+ckb:{
+subtitle:"زانیاری کەشوهەوا ل هەمی باژێرێن جیهانێ",
+placeholder:"ناڤێ باژێری بنڤیسە...",
+search:"بگەڕێ",humidity:"ڕێژا تەمی",wind:"با",
+feels:"هەست پێکرن",rain:"ئەگەری بارانێ",
+forecast:"📅 پێشبینییا کەشوهەوایا ٧ ڕۆژان",
+days:["یەکشەممە","دووشەممە","سێشەممە","چوارشەممە","پێنجشەممە","هەینی","شەممە"],
+states:["ڕۆژەڤە","هەور","هەوری زۆر","باران","بارانیا بەهێز","بەفر","ڕەعد و برووسکە","هەوا پاکە"]
+},
+sor:{
+subtitle:"زانیاری کەشوهەوا لە هەموو شارەکانی جیهان",
+placeholder:"ناوی شارەکە بنووسە...",
+search:"بگەڕێ",humidity:"ڕێژەی شێ",
+wind:"با",feels:"هەستی پلەی گەرمی",
+rain:"ئەگەری باران",
+forecast:"📅 پێشبینی کەشوهەوای ٧ ڕۆژ",
+days:["یەکشەممە","دووشەممە","سێشەممە","چوارشەممە","پێنجشەممە","هەینی","شەممە"],
+states:["خۆرەتاو","هەور","هەوری زۆر","باران","بارانی توند","بەفر","ڕەعد و برووسکە","هەوای پاک"]
+}
 };
-const weekdays=['یەکشەممە','دووشەممە','سێشەممە','چوارشەممە','پێنجشەممە','هەینی','شەممە'];
 
-async function getWeather(){
-const city=document.getElementById('city').value.trim();
-if(!city){
-document.getElementById('message').textContent='تکایە ناڤێ باژێرێ بنڤیسە';
-return;
+function setLang(lang){
+language=lang;
+document.documentElement.lang=lang;
+const w=words[lang];
+document.getElementById("subtitle").textContent=w.subtitle;
+document.getElementById("city").placeholder=w.placeholder;
+document.getElementById("searchBtn").textContent=w.search;
+document.getElementById("humidityLabel").textContent=w.humidity;
+document.getElementById("windLabel").textContent=w.wind;
+document.getElementById("feelsLabel").textContent=w.feels;
+document.getElementById("rainLabel").textContent=w.rain;
+document.getElementById("forecastTitle").textContent=w.forecast;
 }
-document.getElementById('message').textContent='چاوەڕێ بکە...';
+
+function weather(code){
+if(code===0)return ["☀️",words[language].states[0]];
+if(code<=2)return ["🌤️",words[language].states[1]];
+if(code===3)return ["☁️",words[language].states[2]];
+if(code<=48)return ["🌫️",words[language].states[1]];
+if(code<=67)return ["🌧️",words[language].states[3]];
+if(code<=77)return ["❄️",words[language].states[5]];
+if(code<=82)return ["🌧️",words[language].states[4]];
+if(code<=86)return ["❄️",words[language].states[5]];
+if(code>=95)return ["⛈️",words[language].states[6]];
+return ["🌤️",words[language].states[7]];
+}
+
+async function searchCity(){
+const city=document.getElementById("city").value.trim();
+const msg=document.getElementById("message");
+if(!city){msg.textContent="Please enter a city name";return}
+msg.textContent="Loading...";
 try{
-const geo=await fetch('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(city)+'&count=1&language=en&format=json');
+const geo=await fetch("https://geocoding-api.open-meteo.com/v1/search?name="+encodeURIComponent(city)+"&count=1&language=en&format=json");
 const gd=await geo.json();
-if(!gd.results||!gd.results.length)throw Error('City not found');
-const p=gd.results[0];
-
-const url=`https://api.open-meteo.com/v1/forecast?latitude=${p.latitude}&longitude=${p.longitude}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&forecast_days=7&timezone=auto`;
-
+if(!gd.results||!gd.results.length)throw new Error("City not found");
+const place=gd.results[0];
+const url="https://api.open-meteo.com/v1/forecast?latitude="+place.latitude+"&longitude="+place.longitude+"&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=7";
 const response=await fetch(url);
-const d=await response.json();
-const c=d.current;
+const data=await response.json();
+const c=data.current;
+const icon=weather(c.weather_code);
+document.getElementById("cityName").textContent=place.name;
+document.getElementById("temp").textContent=Math.round(c.temperature_2m)+"°C";
+document.getElementById("icon").textContent=icon[0];
+document.getElementById("description").textContent=icon[1];
+document.getElementById("humidity").textContent=c.relative_humidity_2m+"%";
+document.getElementById("wind").textContent=c.wind_speed_10m+" km/h";
+document.getElementById("feels").textContent=Math.round(c.apparent_temperature)+"°C";
+document.getElementById("rain").textContent=c.precipitation+" mm";
 
-document.getElementById('place').textContent=p.name;
-document.getElementById('temp').textContent=Math.round(c.temperature_2m)+'°C';
-document.getElementById('wind').textContent=c.wind_speed_10m+' km/h';
-document.getElementById('humidity').textContent=c.relative_humidity_2m+'%';
-
-const w=codes[c.weather_code]||['🌡️','کەشوهەوای گۆڕاو'];
-document.getElementById('icon').textContent=w[0];
-document.getElementById('desc').textContent=w[1];
-
-let html='';
-for(let i=0;i<7;i++){
-const date=new Date(d.daily.time[i]+'T12:00:00');
-const day=weekdays[date.getDay()];
-const weather=codes[d.daily.weather_code[i]]||['🌡️','گۆڕاو'];
-const max=Math.round(d.daily.temperature_2m_max[i]);
-const min=Math.round(d.daily.temperature_2m_min[i]);
-const rain=d.daily.precipitation_probability_max[i];
-
-html+=`
-<div class="day">
-<div class="day-name">${i===0?'ئەمڕۆ':day}</div>
-<div class="day-icon">${weather[0]}</div>
-<div>${weather[1]}</div>
-<div class="day-temp">${max}° / ${min}°</div>
-<div class="day-rain">💧 ئەگەری باران: ${rain===null?'--':rain+'%'}</div>
+const f=data.daily;
+const days=words[language].days;
+document.getElementById("forecast").innerHTML=f.time.map((date,i)=>{
+const d=new Date(date+"T12:00:00");
+const wd=days[d.getDay()];
+const wi=weather(f.weather_code[i]);
+return `<div class="day">
+<strong>${wd}</strong>
+<div class="day-icon">${wi[0]}</div>
+<div>${wi[1]}</div>
+<h3>${Math.round(f.temperature_2m_max[i])}° / ${Math.round(f.temperature_2m_min[i])}°</h3>
+<div class="small">💧 ${f.precipitation_probability_max[i]??"--"}%</div>
 </div>`;
+}).join("");
+msg.textContent="✓ "+place.name;
+}catch(error){
+msg.textContent="نەشیا کەشوهەوا بهێتە بارکرن. ناڤێ باژێری ب ئینگلیزی بنڤیسە و دوبارە هەوڵ بدە.";
 }
-document.getElementById('forecast').innerHTML=html;
-document.getElementById('message').textContent='نوێکرایەوە ✓';
-}catch(e){
-document.getElementById('message').textContent='کێشەیەک ڕووی دا. ئینتەرنێت و ناڤێ باژێرێ بپشکنە.';
 }
-}
+
+document.getElementById("city").addEventListener("keydown",e=>{
+if(e.key==="Enter")searchCity();
+});
+searchCity();
 </script>
 </body>
 </html>
