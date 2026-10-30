@@ -1,0 +1,77 @@
+
+<!DOCTYPE html>
+<html lang="ckb" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>کەشوهەوایا کوردستان</title>
+<style>
+*{box-sizing:border-box}
+body{
+margin:0;font-family:Arial,sans-serif;
+background:linear-gradient(140deg,#092b55,#1676a5);
+color:white;text-align:center;min-height:100vh;
+padding:25px 15px;
+}
+.container{max-width:650px;margin:auto}
+h1{font-size:30px}
+.search{display:flex;gap:8px;margin:25px 0}
+input{flex:1;padding:14px;border:0;border-radius:12px;font-size:17px;min-width:0}
+button{padding:13px 18px;border:0;border-radius:12px;background:#ffc857;font-size:16px;font-weight:bold}
+.card{background:#ffffff20;border:1px solid #ffffff40;border-radius:22px;padding:25px;margin:15px 0}
+.icon{font-size:75px}
+.temp{font-size:65px;font-weight:bold;margin:10px}
+.details{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.details div{background:#ffffff18;padding:18px;border-radius:15px}
+#message{color:#ffe29a}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>🌤️ کەشوهەوایا کوردستان</h1>
+<p>زانیاری کەشوهەوا ل هەمی باژێرێن جیهانێ</p>
+<div class="search">
+<input id="city" placeholder="ناڤێ باژێری بنڤیسە...">
+<button onclick="getWeather()">بگەڕێ</button>
+</div>
+<div class="card">
+<div class="icon" id="icon">☀️</div>
+<h2 id="place">دهۆک</h2>
+<div class="temp" id="temp">--°</div>
+<h3 id="desc">کەشوهەوا</h3>
+<div class="details">
+<div>💨 با<br><b id="wind">--</b></div>
+<div>💧 رێژا تەمێ<br><b id="humidity">--</b></div>
+</div>
+</div>
+<p id="message">ناڤێ باژێرێ بنڤیسە بۆ زانینا کەشوهەوا</p>
+</div>
+<script>
+async function getWeather(){
+const city=document.getElementById('city').value.trim();
+if(!city){document.getElementById('message').textContent='تکایە ناڤێ باژێرێ بنڤیسە';return}
+document.getElementById('message').textContent='چاوەڕێ بکە...';
+try{
+const geo=await fetch('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(city)+'&count=1&language=en&format=json');
+const gd=await geo.json();
+if(!gd.results||!gd.results.length)throw Error('باژێر نەهاتە دیتن');
+const p=gd.results[0];
+const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.latitude}&longitude=${p.longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m&timezone=auto`);
+const d=await r.json();
+const c=d.current;
+document.getElementById('place').textContent=p.name;
+document.getElementById('temp').textContent=Math.round(c.temperature_2m)+'°C';
+document.getElementById('wind').textContent=c.wind_speed_10m+' km/h';
+document.getElementById('humidity').textContent=c.relative_humidity_2m+'%';
+const codes={0:['☀️','ئاسمان پاکە'],1:['🌤️','کەمێک هەور'],2:['⛅','هەوراوە'],3:['☁️','هەور'],45:['🌫️','تەما'],48:['🌫️','تەمای بەفرین'],51:['🌦️','بارانا سووک'],61:['🌧️','باران'],63:['🌧️','باران'],65:['🌧️','بارانا زۆر'],71:['🌨️','بەفر'],80:['🌦️','باران'],95:['⛈️','ڕەعد و برووسکە']};
+const w=codes[c.weather_code]||['🌡️','کەشوهەوای گۆڕاو'];
+document.getElementById('icon').textContent=w[0];
+document.getElementById('desc').textContent=w[1];
+document.getElementById('message').textContent='نوێکرایەوە ✓';
+}catch(e){
+document.getElementById('message').textContent='باژێر نەهاتە دیتن یان ئینتەرنێت نییە. دووبارە هەوڵ بدە.';
+}
+}
+</script>
+</body>
+</html>
